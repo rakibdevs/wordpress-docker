@@ -1,0 +1,40 @@
+version: "3"
+services:
+  wordpress:
+    image: wordpress:latest # https://hub.docker.com/_/wordpress/
+    build:
+      context: ./docker/wordpress
+    ports:
+      - "8990:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./docker/wordpress/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ./docker/wordpress/php.ini:/usr/local/etc/php/php.ini:rw
+      - ./docker/wordpress/openssl.cnf:/etc/ssl/openssl.cnf:rw
+      #- ./plugin-name/trunk/:/var/www/html/wp-content/plugins/plugin-name # Plugin development
+      #- ./theme-name/trunk/:/var/www/html/wp-content/themes/theme-name # Theme development
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_NAME: "wordpress"
+      WORDPRESS_DB_USER: "root"
+      WORDPRESS_DB_PASSWORD: "1234"
+    depends_on:
+      - mysql
+    links:
+      - mysql
+    networks:
+      - default
+
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "wordpress"
+      MYSQL_ROOT_PASSWORD: "1234"
+    ports:
+      - 3398:3306
+    volumes:
+      - ./docker/database:/var/lib/mysql
+    networks:
+      - default
